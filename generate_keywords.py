@@ -11,8 +11,12 @@ def get_titles(file_name):
                 yield m.groups()[0]
 
 
-if __name__ == "__main__":
+def generate_keywords():
     with open("keywords.txt", "w") as f:
         for c in tqdm.tqdm(list(ascii_lowercase) + ["number", "other"]):
             for t in get_titles(f"data/{c}.json"):
                 print(t, file=f)
+
+
+if __name__ == "__main__":
+    generate_keywords()
