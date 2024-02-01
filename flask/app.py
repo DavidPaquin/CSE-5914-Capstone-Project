@@ -1,12 +1,17 @@
 from flask import Flask
 from flask import request
 import uuid
+from game import Game
 
 app = Flask(__name__)
 
-#Create an id for one player
-player_id = uuid.uuid4()
-print(f"The game id is: {player_id}")
+#Create a dictionary of game_id: Game
+games = dict()
+
+#Create a new id and matching Game object
+new_id = uuid.uuid4()
+games[new_id] = Game(new_id, "0001", "0002")
+print(f"The game is: {games[new_id]}")
 
 #An example response containing the Python Wikipedia page
 article_python = {
@@ -31,13 +36,13 @@ A successor to the programming language B, C was originally developed at Bell La
 @app.route("/")
 def index() -> str:
     #Render some html with a link when a user visits the site with no path
-    return f"A player was generated with id: {player_id}. Navigate to <a href=\"/serve_article/{player_id}\"> /serve_article/{player_id} </a> to see an example response." 
+    return f"There are {len(games)} games. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response." 
 
 #This function runs when a GET request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.get("/serve_article/<uuid:id>")
 def serve_article_get(id: uuid.UUID) -> dict:
     #Check if the given id matches the player
-    if id == player_id:
+    if id in games:
         #Serve an example article
         return article_python
     else:
@@ -47,8 +52,9 @@ def serve_article_get(id: uuid.UUID) -> dict:
 @app.post("/serve_article/<uuid:id>")
 def serve_article_post(id: uuid.UUID) -> dict:
     #Check if the given id matches the player
-    if id != player_id:
-        return {"error": "The provided id does not match a valid player id."}
+    if id not in games:
+        print(f"Got an id of {id} which is not a valid game.")
+        return {"error": "The provided id does not match a valid game id."}
     
     #Obtain the search query from the request
     if request.content_type != "application/json":
