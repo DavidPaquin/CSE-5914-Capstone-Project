@@ -72,8 +72,7 @@ def hydrate(ES, index_name, json_file):
     ES.indices.refresh(index=index_name)
 
 
-if __name__ == "__main__":
-    # NOTE: Make sure ES is running in Docker before running this script!
+def hydrate_all():
     ES = Elasticsearch(
         "https://localhost:9200",
         ca_certs=os.environ["PATH_TO_HTTPCA_CERT"],
@@ -85,3 +84,8 @@ if __name__ == "__main__":
     clean_index(ES, index_name)
     for c in list(ascii_lowercase) + ["number", "other"]:
         hydrate(ES, index_name, f"data/{c}.json")
+
+
+if __name__ == "__main__":
+    # NOTE: Make sure ES is running in Docker before running this script!
+    hydrate_all()
