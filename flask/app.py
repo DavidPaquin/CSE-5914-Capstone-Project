@@ -1,8 +1,29 @@
 from flask import Flask
 from flask import request
+from elasticsearch import Elasticsearch, helpers
 import uuid
+import os
+
+#Searches title field for given phrase
+def search_title(ES, query):
+    resp = es.search( index="articles",
+    body={
+        "query": {
+            "match_phrase": {
+                "title": {
+                    "query": query}
+            }
+        }
+    },
+    )
+    return resp
 
 app = Flask(__name__)
+es = Elasticsearch(
+        "https://localhost:9200",
+        ca_certs=os.environ["PATH_TO_HTTPCA_CERT"],
+        basic_auth=("elastic", os.environ["ELASTIC_PASSWORD"]),
+    )
 
 #Create an id for one player
 player_id = uuid.uuid4()
@@ -62,7 +83,7 @@ def serve_article_post(id: uuid.UUID) -> dict:
         return {"error": "The provided request body was malformed, does not contain 'search' key."}
     
     #TODO: We would perform the elasticsearch query here in the real application
-    if body["search"].lower() == "python":
+    """if body["search"].lower() == "python":
         print("Serving python article.")
         return article_python
     elif body["search"].lower() == "c":
@@ -70,4 +91,8 @@ def serve_article_post(id: uuid.UUID) -> dict:
         return article_c
     else:
         return body
+    """
+    #Searches for given title and returns the first result
+    resp = search_title(es, body["search"])
+    return resp['hits']['hits'][0]["_source"]
         
