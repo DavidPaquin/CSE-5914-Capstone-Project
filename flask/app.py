@@ -52,7 +52,7 @@ A successor to the programming language B, C was originally developed at Bell La
 @app.route("/")
 def index() -> str:
     #Render some html with a link when a user visits the site with no path
-    return f"A player was generated with id: {player_id}. Navigate to <a href=\"/serve_article/{player_id}\"> /serve_article/{player_id} </a> to see an example response." 
+    return f"A player was generated with id: {player_id}. Navigate to <a href=\"/serve_article/{player_id}\"> /serve_article/{player_id} </a> to see an example response.<br> <a href=\"/search_article/{player_id}\">Search</a>" 
 
 #This function runs when a GET request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.get("/serve_article/<uuid:id>")
@@ -95,4 +95,20 @@ def serve_article_post(id: uuid.UUID) -> dict:
     #Searches for given title and returns the first result
     resp = search_title(es, body["search"])
     return resp['hits']['hits'][0]["_source"]
-        
+    
+@app.get("/search_article/<uuid:id>")
+def search_article_get(id: uuid.UUID):
+    if id != player_id:
+        return {"error": "The provided id does not match a valid player id."}
+    return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form>"
+
+@app.post("/search_article/<uuid:id>")
+def search_article_post(id: uuid.UUID):
+    if id != player_id:
+        return {"error": "The provided id does not match a valid player id."}
+    resp = search_title(es, request.form['Term'])
+    if len(resp["hits"]["hits"]):
+        title = resp['hits']['hits'][0]["_source"]["title"]
+        text = resp['hits']['hits'][0]["_source"]["text"]
+        return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>"+title+"</h1><br><p>"+text+"</p>"
+    return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>No results found</h1>"
