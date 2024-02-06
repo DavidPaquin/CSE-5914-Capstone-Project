@@ -20,6 +20,11 @@ def search_title(ES, query):
     return resp
 
 app = Flask(__name__)
+es = Elasticsearch(
+        "https://localhost:9200",
+        ca_certs=os.environ["PATH_TO_HTTPCA_CERT"],
+        basic_auth=("elastic", os.environ["ELASTIC_PASSWORD"]),
+    )
 
 #Create a dictionary of game_id: Game
 games = dict()
