@@ -47,9 +47,17 @@ def clean_index(ES, index_name):
         index=index_name,
         body={
             "mappings": {
-                "properties": {"title": {"type": "text"}, "text": {"type": "text"}}
-            }
-        },
+                    "properties": {
+                        "title": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword"
+                                }
+                            }
+                        }, "text": {"type": "text"}}
+                    }
+                }
     )
 
 
