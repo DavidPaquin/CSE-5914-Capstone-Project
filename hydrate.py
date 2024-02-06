@@ -8,7 +8,7 @@ import re
 
 def lazy_load(json_file, batch_size):
     first = True
-    with open(json_file, "r") as f:
+    with open(json_file, "r", encoding="utf-8") as f:
         cur, output = 0, []
         for line in f:
             if first:
@@ -56,7 +56,7 @@ def clean_index(ES, index_name):
 def hydrate(ES, index_name, json_file):
     total = 0
     pattern = re.compile(r"^\{$")
-    with open(json_file, "r") as f:
+    with open(json_file, "r", encoding="utf-8") as f:
         for line in f:
             if pattern.match(line):
                 total += 1
