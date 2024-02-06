@@ -5,13 +5,38 @@ import uuid
 import os
 
 #Searches title field for given phrase
-def search_title(ES, query):
+def search_title_match_phrase(ES, query):
     resp = es.search( index="articles",
     body={
         "query": {
             "match_phrase": {
                 "title": {
                     "query": query}
+            }
+        }
+    },
+    )
+    return resp
+
+def search_title_match(ES, query):
+    resp = es.search( index="articles",
+    body={
+        "query": {
+            "match": {
+                "title": {
+                    "query": query}
+            }
+        }
+    },
+    )
+    return resp
+
+def search_title_exact(ES, query):
+    resp = es.search( index="articles",
+    body={
+        "query": {
+            "term": {
+                "title.keyword": query
             }
         }
     },
@@ -93,7 +118,7 @@ def serve_article_post(id: uuid.UUID) -> dict:
         return body
     """
     #Searches for given title and returns the first result
-    resp = search_title(es, body["search"])
+    resp = search_title_match_phrase(es, body["search"])
     return resp['hits']['hits'][0]["_source"]
     
 @app.get("/search_article/<uuid:id>")
@@ -106,7 +131,7 @@ def search_article_get(id: uuid.UUID):
 def search_article_post(id: uuid.UUID):
     if id != player_id:
         return {"error": "The provided id does not match a valid player id."}
-    resp = search_title(es, request.form['Term'])
+    resp = search_title_match_phrase(es, request.form['Term'])
     if len(resp["hits"]["hits"]):
         title = resp['hits']['hits'][0]["_source"]["title"]
         text = resp['hits']['hits'][0]["_source"]["text"]
