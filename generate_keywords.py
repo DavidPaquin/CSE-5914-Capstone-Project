@@ -13,7 +13,7 @@ def get_titles(file_name):
 
 def generate_keywords():
     with open("keywords.txt", "w", encoding="utf-8") as f:
-        for c in tqdm.tqdm(list(ascii_lowercase) + ["number", "other"]):
+        for c in tqdm.tqdm(list(ascii_lowercase) + ["number", "other"], desc="Generating keywords.txt"):
             for t in get_titles(f"data/{c}.json"):
                 print(t, file=f)
 
