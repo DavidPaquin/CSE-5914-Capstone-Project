@@ -44,6 +44,19 @@ def search_title_exact(ES, query):
     )
     return resp
 
+#Get 10 random articles
+def search_random(ES):
+    resp = es.search( index="articles",
+    body={
+        "query": {
+            "function_score": {
+                "random_score": {}
+            }
+        }
+    },
+    )
+    return resp
+
 app = Flask(__name__)
 es = Elasticsearch(
         "https://localhost:9200",
@@ -56,7 +69,8 @@ games = dict()
 
 #Create a new id and matching Game object
 new_id = uuid.uuid4()
-games[new_id] = Game(new_id, "0001", "0002")
+start_article, end_article = search_random(es)['hits']['hits'][0:2]
+games[new_id] = Game(new_id, start_article["_id"], start_article["_id"])
 print(f"The game is: {games[new_id]}")
 
 #An example response containing the Python Wikipedia page
@@ -82,7 +96,7 @@ A successor to the programming language B, C was originally developed at Bell La
 @app.route("/")
 def index() -> str:
     #Render some html with a link when a user visits the site with no path
-    return f"There are {len(games)} games. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response." 
+    return f"There are {len(games)} games currently running. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database." 
 
 #This function runs when a GET request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.get("/serve_article/<uuid:id>")
@@ -92,7 +106,7 @@ def serve_article_get(id: uuid.UUID) -> dict:
         #Serve an example article
         return article_python
     else:
-        return {"error": "The provided id does not match a valid player id."}
+        return {"error": "The provided id does not match a valid game id."}
 
 #This function runs when a POST request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.post("/serve_article/<uuid:id>")
@@ -130,13 +144,13 @@ def serve_article_post(id: uuid.UUID) -> dict:
 @app.get("/search_article/<uuid:id>")
 def search_article_get(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid player id."}
+        return {"error": "The provided id does not match a valid game id."}
     return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form>"
 
 @app.post("/search_article/<uuid:id>")
 def search_article_post(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid player id."}
+        return {"error": "The provided id does not match a valid game id."}
     resp = search_title_match_phrase(es, request.form['Term'])
     if len(resp["hits"]["hits"]):
         title = resp['hits']['hits'][0]["_source"]["title"]
