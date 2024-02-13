@@ -96,7 +96,7 @@ A successor to the programming language B, C was originally developed at Bell La
 @app.route("/")
 def index() -> str:
     #Render some html with a link when a user visits the site with no path
-    return f"There are {len(games)} games currently running. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database." 
+    return f"There are {len(games)} games currently running. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database. <br />Navigate to <a href=\"/start_article/{list(games.keys())[0]}\"> /start_article/{list(games.keys())[0]} </a> to get a random start article." 
 
 #This function runs when a GET request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.get("/serve_article/<uuid:id>")
@@ -157,3 +157,11 @@ def search_article_post(id: uuid.UUID):
         text = resp['hits']['hits'][0]["_source"]["text"]
         return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>"+title+"</h1><br><p>"+text+"</p>"
     return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>No results found</h1>"
+
+@app.get("/start_article/<uuid:id>")
+def start_article_get(id: uuid.UUID):
+    if id not in games:
+        return {"error": "The provided id does not match a valid game id."}
+    title = start_article["_source"]["title"]
+    text = start_article["_source"]["text"]
+    return "<p>This is a random article found when the app is run</p><br><h2>"+title+"</h2><br><p>"+text+"</p>"
