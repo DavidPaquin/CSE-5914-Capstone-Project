@@ -101,4 +101,20 @@ def serve_article_post(id: uuid.UUID) -> dict:
     #Searches for given title and returns the first result
     resp = search_title(es, body["search"])
     return resp['hits']['hits'][0]["_source"]
-        
+    
+@app.get("/search_article/<uuid:id>")
+def search_article_get(id: uuid.UUID):
+    if id not in games:
+        return {"error": "The provided id does not match a valid player id."}
+    return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form>"
+
+@app.post("/search_article/<uuid:id>")
+def search_article_post(id: uuid.UUID):
+    if id not in games:
+        return {"error": "The provided id does not match a valid player id."}
+    resp = search_title(es, request.form['Term'])
+    if len(resp["hits"]["hits"]):
+        title = resp['hits']['hits'][0]["_source"]["title"]
+        text = resp['hits']['hits'][0]["_source"]["text"]
+        return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>"+title+"</h1><br><p>"+text+"</p>"
+    return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>No results found</h1>"
