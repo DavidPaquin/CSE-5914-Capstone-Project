@@ -1,50 +1,99 @@
 from elasticsearch import Elasticsearch, helpers
+import tqdm
 import os
-import pandas as pd
+from string import ascii_lowercase
 import json
+import re
 
 
-def batched(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx : min(ndx + n, l)]
+def lazy_load(json_file, batch_size):
+    first = True
+    with open(json_file, "r", encoding="utf-8") as f:
+        cur, output = 0, []
+        for line in f:
+            if first:
+                first = False
+                continue
+
+            if cur == 0:
+                obj = ["{"]
+            elif cur == 1:
+                words = line.split(":")
+                title = words[-1][1:-1]
+                if title[0] != '"' or title[-2] != '"':
+                    words[-1] = f' "{title}",'
+                    line = ":".join(words)
+                obj.append(line)
+            elif cur == 2:
+                obj.append(line)
+            elif cur == 3:
+                obj.append("}")
+                output.append(json.loads("".join(obj), strict=False))
+                cur = -1
+            cur += 1
+            if len(output) == batch_size:
+                yield output
+                output = []
+    yield output
 
 
-def hydrate(es, index_name, csv_file):
+def clean_index(ES, index_name):
     try:
-        es.indices.delete(index=index_name)
+        ES.indices.delete(index=index_name)
     except:
         pass
 
-    # TODO: once we have the actual dataset, we should
-    # add a mapping here to make sure types are set correctly
-    es.indices.create(index=index_name)
-
-    print("Reading CSV file...", end="", flush=True)
-    df = pd.read_csv(csv_file)
-    print("done!")
-    json_records = json.loads(df.to_json(orient="records"))
-    count, total = 0, len(df)
-    for batch in batched(json_records, 25_000):
-        action_list = [
-            {"_op_type": "index", "_index": index_name, "_source": data_row}
-            for data_row in batch
-        ]
-        helpers.bulk(es, action_list)
-        count += len(batch)
-        print(f"\rProgress: {count}/{total} rows indexed", end="")
-
-    es.indices.refresh(index=index_name)
-    print("\nHydration completed successfully")
+    ES.indices.create(
+        index=index_name,
+        body={
+            "mappings": {
+                    "properties": {
+                        "title": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword"
+                                }
+                            }
+                        }, "text": {"type": "text"}}
+                    }
+                }
+    )
 
 
-if __name__ == "__main__":
-    # NOTE: Make sure ES is running in Docker before running
-    es = Elasticsearch(
+def hydrate(ES, index_name, json_file):
+    total = 0
+    pattern = re.compile(r"^\{$")
+    with open(json_file, "r", encoding="utf-8") as f:
+        for line in f:
+            if pattern.match(line):
+                total += 1
+    with tqdm.tqdm(total=total) as progress:
+        progress.set_description(desc=json_file)
+        for batch in lazy_load(json_file, 5_000):
+            action_list = [
+                {"_op_type": "index", "_index": index_name, "_source": data_row}
+                for data_row in batch
+            ]
+            helpers.bulk(ES, action_list)
+            progress.update(len(batch))
+    ES.indices.refresh(index=index_name)
+
+
+def hydrate_all():
+    ES = Elasticsearch(
         "https://localhost:9200",
         ca_certs=os.environ["PATH_TO_HTTPCA_CERT"],
         basic_auth=("elastic", os.environ["ELASTIC_PASSWORD"]),
+        retry_on_timeout=True,
+        request_timeout=100,
     )
-    index_name = "test"
-    csv_file = "sample_data.csv"
-    hydrate(es, index_name, csv_file)
+    index_name = "articles"
+    clean_index(ES, index_name)
+    for c in list(ascii_lowercase) + ["number", "other"]:
+        hydrate(ES, index_name, f"data/{c}.json")
+
+
+if __name__ == "__main__":
+    # NOTE: Make sure ES is running in Docker before running this script!
+    hydrate_all()
