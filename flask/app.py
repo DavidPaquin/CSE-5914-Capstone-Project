@@ -6,7 +6,7 @@ from game import Game
 import os
 
 #Searches title field for given phrase
-def search_title_match_phrase(ES, query):
+def search_title_match_phrase(es, query):
     resp = es.search( index="articles",
     body={
         "query": {
@@ -19,7 +19,7 @@ def search_title_match_phrase(ES, query):
     )
     return resp
 
-def search_title_match(ES, query):
+def search_title_match(es, query):
     resp = es.search( index="articles",
     body={
         "query": {
@@ -32,7 +32,7 @@ def search_title_match(ES, query):
     )
     return resp
 
-def search_title_exact(ES, query):
+def search_title_exact(es, query):
     resp = es.search( index="articles",
     body={
         "query": {
@@ -45,7 +45,7 @@ def search_title_exact(ES, query):
     return resp
 
 #Get 10 random articles
-def search_random(ES):
+def search_random(es):
     resp = es.search( index="articles",
     body={
         "query": {
@@ -57,6 +57,10 @@ def search_random(ES):
     )
     return resp
 
+#Get the article with _id = id
+def search_id(es, id):
+    return es.get(index="articles", id=id)
+
 app = Flask(__name__)
 es = Elasticsearch(
         "https://localhost:9200",
@@ -66,12 +70,6 @@ es = Elasticsearch(
 
 #Create a dictionary of game_id: Game
 games = dict()
-
-#Create a new id and matching Game object
-new_id = uuid.uuid4()
-start_article, end_article = search_random(es)['hits']['hits'][0:2]
-games[new_id] = Game(new_id, start_article["_id"], start_article["_id"])
-print(f"The game is: {games[new_id]}")
 
 #An example response containing the Python Wikipedia page
 article_python = {
@@ -96,7 +94,10 @@ A successor to the programming language B, C was originally developed at Bell La
 @app.route("/")
 def index() -> str:
     #Render some html with a link when a user visits the site with no path
-    return f"There are {len(games)} games currently running. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database. <br />Navigate to <a href=\"/start_article/{list(games.keys())[0]}\"> /start_article/{list(games.keys())[0]} </a> to get a random start article." 
+    if len(games) > 0:
+        return f"There are {len(games)} games currently running. Navigate to <a href=\"/serve_article/{list(games.keys())[0]}\"> /serve_article/{list(games.keys())[0]} </a> to see an example response. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database. <br />Navigate to <a href=\"/start_article/{list(games.keys())[0]}\"> /start_article/{list(games.keys())[0]} </a> to get a random start article.<br /> <form action = \"/api/start_game\" method =\"post\"> <input type=\"submit\" value = \"Create New Game\"></form>" 
+    else:
+        return "There are no games currently running. <br /> <form action = \"/api/start_game\" method =\"post\"> <input type=\"submit\" value = \"Create New Game\"></form>"     
 
 #This function runs when a GET request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.get("/serve_article/<uuid:id>")
@@ -127,16 +128,6 @@ def serve_article_post(id: uuid.UUID) -> dict:
     if "search" not in body:
         return {"error": "The provided request body was malformed, does not contain 'search' key."}
     
-    #TODO: We would perform the elasticsearch query here in the real application
-    """if body["search"].lower() == "python":
-        print("Serving python article.")
-        return article_python
-    elif body["search"].lower() == "c":
-        print("Serving C article.")
-        return article_c
-    else:
-        return body
-    """
     #Searches for given title and returns the first result
     resp = search_title_match_phrase(es, body["search"])
     return resp['hits']['hits'][0]["_source"]
@@ -162,6 +153,32 @@ def search_article_post(id: uuid.UUID):
 def start_article_get(id: uuid.UUID):
     if id not in games:
         return {"error": "The provided id does not match a valid game id."}
+    game = games[id]
+    start_article = search_id(es, game.start_article)
     title = start_article["_source"]["title"]
     text = start_article["_source"]["text"]
     return "<p>This is a random article found when the app is run</p><br><h2>"+title+"</h2><br><p>"+text+"</p>"
+
+@app.post("/api/start_game")
+def start_game_post():
+    #Create a new id and matching Game object
+    new_id = uuid.uuid4()
+    start_article, end_article = search_random(es)['hits']['hits'][0:2]
+    games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
+    print(f"A new game was created: {games[new_id]}")
+    #Create the response
+    resp = {
+        "game_id": new_id,
+        "start_article": {
+            "id": games[new_id].start_article,
+            "title": start_article["_source"]["title"],
+            "text": start_article["_source"]["text"],
+            "source": "Wikipedia"
+        },
+        "end_article": {
+            "id": games[new_id].end_article,
+            "title": end_article["_source"]["title"],
+            "source": "Wikipedia"
+        }
+    }
+    return resp
