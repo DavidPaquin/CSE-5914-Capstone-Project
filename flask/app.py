@@ -182,3 +182,14 @@ def start_game_post():
         }
     }
     return resp
+
+@app.post()
+def new_turn_post(id: uuid.UUID):
+    if id not in games:
+        return {"error": "The provided id does not match a valid game id."}
+    #retrieve article id to be compared
+    data = request.get_json()
+    Game.hop(games[id], data["article_id"])
+    if Game.check_win(games[id], data["article_id"]):
+        return {"game_id":id, "check_win":"true"}
+    return {"game_id":id, "check_win":"false"}
