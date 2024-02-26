@@ -17,16 +17,16 @@ def lazy_load(json_file, batch_size):
 
             if cur == 0:
                 obj = ["{"]
-            elif cur == 1:
+            elif cur == 3:
                 words = line.split(":")
-                title = words[-1][1:-1]
+                title = words[-1][1:-1]+','
                 if title[0] != '"' or title[-2] != '"':
                     words[-1] = f' "{title}",'
                     line = ":".join(words)
                 obj.append(line)
             elif cur == 2:
                 obj.append(line)
-            elif cur == 3:
+            elif cur == 4:
                 obj.append("}")
                 output.append(json.loads("".join(obj), strict=False))
                 cur = -1
@@ -90,8 +90,8 @@ def hydrate_all():
     )
     index_name = "articles"
     clean_index(ES, index_name)
-    for c in list(ascii_lowercase) + ["number", "other"]:
-        hydrate(ES, index_name, f"data/{c}.json")
+    for file in [f for f in os.listdir("data/") if os.path.isfile(os.path.join("data/", f))]:
+        hydrate(ES, index_name, os.path.join("data/", file))
 
 
 if __name__ == "__main__":
