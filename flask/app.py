@@ -193,32 +193,3 @@ def new_turn_post(id: uuid.UUID):
     if Game.check_win(games[id], data["article_id"]):
         return {"game_id":id, "check_win":"true"}
     return {"game_id":id, "check_win":"false"}
-
-@app.post("/api/new_articles")
-def new_articles_post(id: uuid.UUID):
-    if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
-    #retrieve highlighted text for es
-    query = request.get_json()
-    resp = search_title_match_phrase(es, query["text"])
-    return {
-        "game_id":id,
-        "article_1": {
-            "id": resp['hits']['hits'][0]["_id"],
-            "title": resp['hits']['hits'][0]["_source"]["title"],
-            "text": resp['hits']['hits'][0]["_source"]["text"],
-            "source": "Wikipedia"
-        },
-        "article_2": {
-            "id": resp['hits']['hits'][1]["_id"],
-            "title": resp['hits']['hits'][1]["_source"]["title"],
-            "text": resp['hits']['hits'][1]["_source"]["text"],
-            "source": "Wikipedia"
-        },
-        "article_3": {
-            "id": resp['hits']['hits'][2]["_id"],
-            "title": resp['hits']['hits'][2]["_source"]["title"],
-            "text": resp['hits']['hits'][2]["_source"]["text"],
-            "source": "Wikipedia"
-        }
-    }
