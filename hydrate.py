@@ -90,7 +90,7 @@ def hydrate_all():
     )
     index_name = "articles"
     clean_index(ES, index_name)
-    for file in [f for f in os.listdir("data/") if os.path.isfile(os.path.join("data/", f))]:
+    for file in [f for f in os.listdir("data/") if os.path.isfile(os.path.join("data/", f)) and f.lower().endswith(".json")]:
         hydrate(ES, index_name, os.path.join("data/", file))
 
 
