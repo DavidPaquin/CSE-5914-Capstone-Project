@@ -6,7 +6,7 @@ from game import Game
 import os
 
 #Searches title field for given phrase
-def search_title_match_phrase(es, query):
+def search_title_match_phrase(es, query, size=10):
     resp = es.search( index="articles",
     body={
         "query": {
@@ -16,6 +16,7 @@ def search_title_match_phrase(es, query):
             }
         }
     },
+    size=size
     )
     return resp
 
@@ -157,7 +158,7 @@ def start_article_get(id: uuid.UUID):
     start_article = search_id(es, game.start_article)
     title = start_article["_source"]["title"]
     text = start_article["_source"]["text"]
-    return "<p>This is a random article found when the app is run</p><br><h2>"+title+"</h2><br><p>"+text+"</p>"
+    return "<p>This is a random article found when the app is run</p><br><h2>"+title+"</h2><br><p>"+text+"</p>"+f"<form action = \"/api/new_articles/{id}\" method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"query\" name = \"query\"> <input type=\"submit\" value = \"Submit\"></form>"
 
 @app.post("/api/start_game")
 def start_game_post():
@@ -193,3 +194,33 @@ def new_turn_post(id: uuid.UUID):
     if Game.check_win(games[id], data["article_id"]):
         return {"game_id":id, "check_win":"true"}
     return {"game_id":id, "check_win":"false"}
+
+@app.post("/api/new_articles/<uuid:id>")
+def new_articles(id: uuid.UUID):
+    if id not in games:
+        return {"error": "The provided id does not match a valid game id."}
+    article_count = 3 #return 3 articles
+    game = games[id]
+    query = request.form["query"].strip()
+    #Anti cheat ensure query is actually in current article text
+    current_article = search_id(es, game.history[-1])
+    if query not in current_article["_source"]["text"]:
+        #Query wasn't found in the current article
+        print(f"ANTICHEAT: Query not in current article.\n  GAME ID: {id}\n   ARTICLE ID: {game.history[-1]}\n  QUERY: \"{query}\"")
+        return {"error": "The query was not found in the current article."}
+    #Get the articles from the ES database based
+    articles = search_title_match_phrase(es, query, article_count)
+    #Build the response dynamically
+    resp = {
+        "game_id": id,
+        "articles": []
+    }
+    for article in articles['hits']['hits']:
+        article_dict = {
+            "id": article["_id"],
+            "title": article["_source"]["title"],
+            "text": article["_source"]["text"],
+            "source": "Wikipedia"
+        }
+        resp["articles"].append(article_dict)
+    return resp
