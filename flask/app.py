@@ -184,7 +184,7 @@ def start_game_post():
     }
     return resp
 
-@app.post()
+@app.post("/api/new_turn")
 def new_turn_post(id: uuid.UUID):
     if id not in games:
         return {"error": "The provided id does not match a valid game id."}
