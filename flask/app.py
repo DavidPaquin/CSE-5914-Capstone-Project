@@ -124,41 +124,43 @@ def serve_article_get(id: uuid.UUID) -> dict:
         #Serve an example article
         return article_python
     else:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
 
 #This function runs when a POST request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.post("/serve_article/<uuid:id>")
+@cross_origin()
 def serve_article_post(id: uuid.UUID) -> dict:
     #Check if the given id matches the player
     if id not in games:
         print(f"Got an id of {id} which is not a valid game.")
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     
     #Obtain the search query from the request
     if request.content_type != "application/json":
         print(f"The expected request content_type is \"application/json\" - instead got {request.content_type}")
-        return {"error": f"The expected request content_type is \"application/json\" - instead got {request.content_type}"}
+        return jsonify({"error": f"The expected request content_type is \"application/json\" - instead got {request.content_type}"})
     
     body = request.get_json()
     print(f"Request body: {body}")
 
     if "search" not in body:
-        return {"error": "The provided request body was malformed, does not contain 'search' key."}
+        return jsonify({"error": "The provided request body was malformed, does not contain 'search' key."})
     
     #Searches for given title and returns the first result
     resp = search_title_match_phrase(es, body["search"])
-    return resp['hits']['hits'][0]["_source"]
+    return jsonify(resp['hits']['hits'][0]["_source"])
     
 @app.get("/search_article/<uuid:id>")
 def search_article_get(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form>"
 
 @app.post("/search_article/<uuid:id>")
+@cross_origin()
 def search_article_post(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     resp = search_title_match_phrase(es, request.form['Term'])
     if len(resp["hits"]["hits"]):
         title = resp['hits']['hits'][0]["_source"]["title"]
@@ -169,7 +171,7 @@ def search_article_post(id: uuid.UUID):
 @app.get("/start_article/<uuid:id>")
 def start_article_get(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     game = games[id]
     start_article = search_id(es, game.start_article)
     title = start_article["_source"]["title"]
@@ -185,7 +187,7 @@ def start_game_post():
     games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
     print(f"A new game was created: {games[new_id]}")
     #Create the response
-    resp = jsonify({
+    resp = {
         "game_id": new_id,
         "start_article": {
             "id": games[new_id].start_article,
@@ -198,25 +200,27 @@ def start_game_post():
             "title": end_article["_source"]["title"],
             "source": "Wikipedia"
         }
-    })
-    resp.headers.add("Access-Control-Allow-Origin", "*")
-    return resp
+    }
+    return jsonify(resp)
 
 @app.post("/api/new_turn/<uuid:id>")
+@cross_origin()
 def new_turn_post(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     #retrieve article id to be compared
     data = request.get_json()
     game = games[id]
     if not game.hop(data["article_id"]):
-        return {"error": "The chosen article does is not a valid choice."}
-    return {"game_id":id, "check_win":str(game.check_win(data["article_id"]))}
+        return jsonify({"error": "The chosen article does is not a valid choice."})
+    resp = {"game_id":id, "check_win":str(game.check_win(data["article_id"]))}
+    return jsonify(resp)
 
 @app.post("/api/new_articles/<uuid:id>")
+@cross_origin()
 def new_articles(id: uuid.UUID):
     if id not in games:
-        return {"error": "The provided id does not match a valid game id."}
+        return jsonify({"error": "The provided id does not match a valid game id."})
     article_count = 3 #return 3 articles
     game = games[id]
     query = request.form["query"].strip()
@@ -225,7 +229,7 @@ def new_articles(id: uuid.UUID):
     if query not in current_article["_source"]["text"]:
         #Query wasn't found in the current article
         print(f"ANTICHEAT: Query not in current article.\n  GAME ID: {id}\n   ARTICLE ID: {game.history[-1]}\n  QUERY: \"{query}\"")
-        return {"error": "The query was not found in the current article."}
+        return jsonify({"error": "The query was not found in the current article."})
     #Get the articles from the ES database based
     articles = search_title_match_phrase(es, query, article_count)
     #Build the response dynamically and update game object
@@ -243,4 +247,4 @@ def new_articles(id: uuid.UUID):
         }
         resp["articles"].append(article_dict)
         game.choices.append(article["_id"])
-    return resp
+    return jsonify(resp)
