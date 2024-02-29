@@ -1,9 +1,7 @@
 from elasticsearch import Elasticsearch, helpers
 import tqdm
 import os
-from string import ascii_lowercase
 import json
-import re
 
 
 def lazy_load(json_file, batch_size):
@@ -19,7 +17,7 @@ def lazy_load(json_file, batch_size):
                 obj = ["{"]
             elif cur == 3:
                 words = line.split(":")
-                title = words[-1][1:-1]+','
+                title = words[-1][1:-1] + ","
                 if title[0] != '"' or title[-2] != '"':
                     words[-1] = f' "{title}",'
                     line = ":".join(words)
@@ -47,36 +45,25 @@ def clean_index(ES, index_name):
         index=index_name,
         body={
             "mappings": {
-                    "properties": {
-                        "title": {
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "type": "keyword"
-                                }
-                            }
-                        }, "text": {"type": "text"}}
-                    }
+                "properties": {
+                    "title": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "text": {"type": "text"},
                 }
+            }
+        },
     )
 
 
 def hydrate(ES, index_name, json_file):
-    total = 0
-    pattern = re.compile(r"^\{$")
-    with open(json_file, "r", encoding="utf-8") as f:
-        for line in f:
-            if pattern.match(line):
-                total += 1
-    with tqdm.tqdm(total=total) as progress:
-        progress.set_description(desc=json_file)
-        for batch in lazy_load(json_file, 5_000):
-            action_list = [
-                {"_op_type": "index", "_index": index_name, "_source": data_row}
-                for data_row in batch
-            ]
-            helpers.bulk(ES, action_list)
-            progress.update(len(batch))
+    for batch in lazy_load(json_file, 5_000):
+        action_list = [
+            {"_op_type": "index", "_index": index_name, "_source": data_row}
+            for data_row in batch
+        ]
+        helpers.bulk(ES, action_list)
     ES.indices.refresh(index=index_name)
 
 
@@ -90,7 +77,13 @@ def hydrate_all():
     )
     index_name = "articles"
     clean_index(ES, index_name)
-    for file in [f for f in os.listdir("data/") if os.path.isfile(os.path.join("data/", f)) and f.lower().endswith(".json")]:
+    for file in tqdm.tqdm(
+        [
+            f
+            for f in os.listdir("data/")
+            if os.path.isfile(os.path.join("data/", f)) and f.lower().endswith(".json")
+        ]
+    ):
         hydrate(ES, index_name, os.path.join("data/", file))
 
 
