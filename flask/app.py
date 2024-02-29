@@ -1,5 +1,5 @@
-from flask import Flask
-from flask import request
+from flask import Flask, request, jsonify
+from flask_cors import CORS,cross_origin
 from elasticsearch import Elasticsearch, helpers
 import uuid
 from game import Game
@@ -63,6 +63,7 @@ def search_id(es, id):
     return es.get(index="articles", id=id)
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 es = Elasticsearch(
         "https://localhost:9200",
         ca_certs=os.environ["PATH_TO_HTTPCA_CERT"],
@@ -161,6 +162,7 @@ def start_article_get(id: uuid.UUID):
     return "<p>This is a random article found when the app is run</p><br><h2>"+title+"</h2><br><p>"+text+"</p>"+f"<form action = \"/api/new_articles/{id}\" method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"query\" name = \"query\"> <input type=\"submit\" value = \"Submit\"></form>"
 
 @app.post("/api/start_game")
+@cross_origin()
 def start_game_post():
     #Create a new id and matching Game object
     new_id = uuid.uuid4()
@@ -168,7 +170,7 @@ def start_game_post():
     games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
     print(f"A new game was created: {games[new_id]}")
     #Create the response
-    resp = {
+    resp = jsonify({
         "game_id": new_id,
         "start_article": {
             "id": games[new_id].start_article,
@@ -181,19 +183,20 @@ def start_game_post():
             "title": end_article["_source"]["title"],
             "source": "Wikipedia"
         }
-    }
+    })
+    resp.headers.add("Access-Control-Allow-Origin", "*")
     return resp
 
-@app.post("/api/new_turn")
+@app.post("/api/new_turn/<uuid:id>")
 def new_turn_post(id: uuid.UUID):
     if id not in games:
         return {"error": "The provided id does not match a valid game id."}
     #retrieve article id to be compared
     data = request.get_json()
-    Game.hop(games[id], data["article_id"])
-    if Game.check_win(games[id], data["article_id"]):
-        return {"game_id":id, "check_win":"true"}
-    return {"game_id":id, "check_win":"false"}
+    game = games[id]
+    if not game.hop(data["article_id"]):
+        return {"error": "The chosen article does is not a valid choice."}
+    return {"game_id":id, "check_win":str(game.check_win(data["article_id"]))}
 
 @app.post("/api/new_articles/<uuid:id>")
 def new_articles(id: uuid.UUID):
@@ -210,7 +213,8 @@ def new_articles(id: uuid.UUID):
         return {"error": "The query was not found in the current article."}
     #Get the articles from the ES database based
     articles = search_title_match_phrase(es, query, article_count)
-    #Build the response dynamically
+    #Build the response dynamically and update game object
+    game.choices = []
     resp = {
         "game_id": id,
         "articles": []
@@ -223,4 +227,5 @@ def new_articles(id: uuid.UUID):
             "source": "Wikipedia"
         }
         resp["articles"].append(article_dict)
+        game.choices.append(article["_id"])
     return resp
