@@ -58,6 +58,21 @@ def search_random(es):
     )
     return resp
 
+def search_similar(es, query):
+    resp = es.search(index = "articles",
+    body={
+        "query": {
+            "more_like_this": {
+                "fields": ["text"],
+                "like": query,
+                "min_term_freq": 1,
+                "min_doc_freq": 1    
+            }
+        }
+    },
+    )
+    return resp
+
 #Get the article with _id = id
 def search_id(es, id):
     return es.get(index="articles", id=id)
