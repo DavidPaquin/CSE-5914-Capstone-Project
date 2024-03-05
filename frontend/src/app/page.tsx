@@ -52,7 +52,7 @@ export default function Home() {
       })
 
       .then(data => {
-        if (data.articles) {
+        if (data.articles.length > 0) {
           setSearchArticles(data)
           setSelectedArticle([])
         }
