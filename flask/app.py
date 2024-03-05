@@ -165,6 +165,7 @@ def search_article_post(id: uuid.UUID):
     if len(resp["hits"]["hits"]):
         title = resp['hits']['hits'][0]["_source"]["title"]
         text = resp['hits']['hits'][0]["_source"]["text"]
+        print(f"ID of Searched Article: {resp['hits']['hits'][0]['_id']}")
         return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>"+title+"</h1><br><p>"+text+"</p>"
     return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>No results found</h1>"
 
@@ -203,6 +204,33 @@ def start_game_post():
     }
     return jsonify(resp)
 
+@app.post("/api/debug_start_game")
+@cross_origin()
+def debug_start_game_post():
+    #Create a new id and matching Game object
+    new_id = uuid.uuid4()
+    start_article = search_id(es, "7sg4o40BXxKa0XZq5hQt") #OSU
+    end_article = search_id(es, "58c4o40BXxKa0XZqcEnp") #North Korea
+    #Path: OSU;"research university" -> Research University;"nuclear weapons" -> Nuclear Weapons convention;"North Korea" -> North Korea 
+    games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
+    print(f"A new DEBUG game was created: {games[new_id]}")
+    #Create the response
+    resp = {
+        "game_id": new_id,
+        "start_article": {
+            "id": games[new_id].start_article,
+            "title": start_article["_source"]["title"],
+            "text": start_article["_source"]["text"],
+            "source": "Wikipedia"
+        },
+        "end_article": {
+            "id": games[new_id].end_article,
+            "title": end_article["_source"]["title"],
+            "source": "Wikipedia"
+        }
+    }
+    return jsonify(resp)
+
 @app.post("/api/new_turn/<uuid:id>")
 @cross_origin()
 def new_turn_post(id: uuid.UUID):
@@ -213,7 +241,10 @@ def new_turn_post(id: uuid.UUID):
     game = games[id]
     if not game.hop(data["article_id"]):
         return jsonify({"error": "The chosen article does is not a valid choice."})
-    resp = {"game_id":id, "check_win":str(game.check_win(data["article_id"]))}
+    resp = {"game_id":id,
+            "check_win":str(game.check_win(data["article_id"])),
+            "history": game.history
+    }
     return jsonify(resp)
 
 @app.post("/api/new_articles/<uuid:id>")
