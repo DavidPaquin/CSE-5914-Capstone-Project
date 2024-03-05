@@ -77,6 +77,20 @@ def search_similar(es, query):
 def search_id(es, id):
     return es.get(index="articles", id=id)
 
+#Get the article with ATTRIBUTE id = id
+def search_id_match(es, id):
+    resp = es.search( index="articles",
+    body={
+        "query": {
+            "match": {
+                "id": {
+                    "query": id}
+            }
+        }
+    },
+    )
+    return resp
+
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 es = Elasticsearch(
@@ -165,7 +179,8 @@ def search_article_post(id: uuid.UUID):
     if len(resp["hits"]["hits"]):
         title = resp['hits']['hits'][0]["_source"]["title"]
         text = resp['hits']['hits'][0]["_source"]["text"]
-        print(f"ID of Searched Article: {resp['hits']['hits'][0]['_id']}")
+        print(f"_id of Searched Article: {resp['hits']['hits'][0]['_id']}")
+        print(f"Attribute 'id' of Searched Article: {resp['hits']['hits'][0]['_source']['id']}")
         return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>"+title+"</h1><br><p>"+text+"</p>"
     return "<form method =\"post\">  <label for=\"title\">Term:</label><br> <input type=\"text\" id=\"Term\" name = \"Term\"> <input type=\"submit\" value = \"Submit\"></form> <br> <h1>No results found</h1>"
 
@@ -209,8 +224,8 @@ def start_game_post():
 def debug_start_game_post():
     #Create a new id and matching Game object
     new_id = uuid.uuid4()
-    start_article = search_id(es, "7sg4o40BXxKa0XZq5hQt") #OSU
-    end_article = search_id(es, "58c4o40BXxKa0XZqcEnp") #North Korea
+    start_article = search_id_match(es, "7sg4o40BXxKa0XZq5hQt")['hits']['hits'][0] #OSU
+    end_article = search_id_match(es, "58c4o40BXxKa0XZqcEnp")['hits']['hits'][0] #North Korea
     #Path: OSU;"research university" -> Research University;"nuclear weapons" -> Nuclear Weapons convention;"North Korea" -> North Korea 
     games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
     print(f"A new DEBUG game was created: {games[new_id]}")
