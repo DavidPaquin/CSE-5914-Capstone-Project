@@ -9,13 +9,21 @@ subprocess.run(["pip", "install", "-r", "requirements.txt"], check=True)
 
 # verify that all of the data files exist
 print("\n2. Verify all data files exist\n")
-for c in list(ascii_lowercase) + ["number", "other"]:
-    if not os.path.isfile(f"data/{c}.json"):
-        print(
-            f"ERROR: missing file 'data/{c}.json'\n",
-            "Please read 'data/README.txt' to download the data properly.",
-        )
-        exit()
+file_count = 0
+desired_file_count = 605
+directory = "data/"
+for _, _, files in os.walk(directory):
+    for file in files:
+        if file.lower().endswith(".json"):
+            file_count += 1
+
+if file_count != desired_file_count:
+    print(
+        f"Improper # of files. Expected {file_count} files, but found {desired_file_count}\n"
+        + "Read the data/README.txt for instructions on how to download the necessary data files"
+    )
+    exit()
+
 
 
 print("\n*** Setup complete! ***\n")

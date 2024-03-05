@@ -1,6 +1,7 @@
 This directory should be filled with JSON files for the Wikipedia articles.
 
 The data can be downloaded from this link:
-https://www.kaggle.com/datasets/f761c19cd9dd15a287f4af0d0a3928b4a25b1579d566c9807ddae0e5c27d155f
+https://www.kaggle.com/datasets/ltcmdrdata/plain-text-wikipedia-202011/code
 
-There should be one file for each character in the alphabet, one for numbers, and one for "other" characters.
+There should be 605 json files in total, inside a folder named "enwiki20201020".
+Place the json files directly into this folder.
