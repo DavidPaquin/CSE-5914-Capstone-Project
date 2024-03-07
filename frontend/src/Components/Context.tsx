@@ -1,16 +1,14 @@
-import { Dispatch, createContext, useState } from "react";
+export interface article {
+    id: number,
+    title: string,
+    text: string,
+    source: string
+}
 
-export type gameState = {
+export interface gameState {
     game_id?: number,
-    currentArticle?: {
-        id: number,
-        title: string,
-        text: string,
-        source: string,
-    }
-    endArticleTitle?: string
-    numClicks: number,
-    currentQuery?: string,
+    currentArticle?: article,
+    endArticle?: article,
 }
 
 export function  getInitGameState():gameState{
@@ -18,12 +16,10 @@ export function  getInitGameState():gameState{
 }
 
 export const gameState: gameState = {
-    numClicks: 0,
-    currentQuery: "",
 }
 
+/* 
+In case we want to use a context instead of prop drilling
 const setGameState: Dispatch<any> = () => null
-
 export const state = createContext({gameState, setGameState});
-
-
+*/

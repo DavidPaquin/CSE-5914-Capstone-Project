@@ -1,16 +1,20 @@
 import { Button, Divider, Grid, Stack, Typography } from "@mui/material"
+import { gameState } from "./Context";
+import { startGame } from "@/API/api";
+import { useState } from "react";
 
 type props = {
-
+    stateUpdater: React.Dispatch<React.SetStateAction<gameState>>,
+    setHide: React.Dispatch<React.SetStateAction<boolean>>,
 }
 
 export default function SideBar(props: props) {
     const handleHide = () => {
-
+        props.setHide(true);
     }
 
     const handleNewGame = () => {
-
+        startGame(props.stateUpdater);
     }
 
     return (
