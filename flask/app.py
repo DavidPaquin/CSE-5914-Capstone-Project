@@ -219,7 +219,7 @@ def start_game_post():
     }
     return jsonify(resp)
 
-@app.get("/api/debug_start_game")
+@app.post("/api/debug_start_game")
 @cross_origin()
 def debug_start_game_post():
     #Create a new id and matching Game object
