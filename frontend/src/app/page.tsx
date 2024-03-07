@@ -15,7 +15,8 @@ export default function Home() {
 
 
   const fetchData = () => {
-    fetch("http://127.0.0.1:5000/api/start_game", {method: 'POST'})
+    fetch("http://127.0.0.1:5000/api/debug_start_game", {method: 'POST'})
+    //fetch("http://127.0.0.1:5000/api/start_game", {method: 'POST'})
 
       .then(response => {
         return response.json()
@@ -52,7 +53,7 @@ export default function Home() {
       })
 
       .then(data => {
-        if (data.articles.length > 0) {
+        if (data.articles && data.articles.length > 0) {
           setSearchArticles(data)
           setSelectedArticle([])
         }
