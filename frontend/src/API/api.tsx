@@ -17,7 +17,7 @@ export async function startGame(){
 
 //Given an string of text, get related articles (1-3 articles currently)
 export async function getMoves(game_id: number, currentQuery: string){
-    const link = `http://127.0.0.1:5000/api/new_turn/"+game_id` + game_id.toString();
+    const link = "http://127.0.0.1:5000/api/new_turn/" + game_id.toString();
     
     const res = await fetch(link, {
         method: 'POST',
