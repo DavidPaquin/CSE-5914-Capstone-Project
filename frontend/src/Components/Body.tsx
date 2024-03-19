@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Grid, List, ListItem, Popover, PopoverProps, Typography } from "@mui/material";
+import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Popover, PopoverProps, Typography } from "@mui/material";
 import { useState } from "react";
 import { getMoves } from "@/API/api";
 import { article, gameState } from "./Context";
@@ -47,6 +47,7 @@ export default function Body(props: props) {
     };
 
     return(
+        
         <Box sx={{
             width:'75',
             display: 'flex',
@@ -66,13 +67,14 @@ export default function Body(props: props) {
                     disableAutoFocus
                 >
                     <List>
-                        {articles?.map(article => {
+                        {articles?.articles?.map((article, i) => {
                             return (
-                                <Button onClick={() => handleClick(article)}>
-                                    <ListItem>{article.title}</ListItem>
-                                </Button>
+                                <ListItemButton onClick={() => handleClick(article)} key = {i}>
+                                    <ListItem key = {i}>{article.title}</ListItem>
+                                </ListItemButton>
                             )
                         })}
+                        
                     </List>
                 </Popover>
         </Box>

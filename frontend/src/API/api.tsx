@@ -17,17 +17,14 @@ export async function startGame(){
 
 //Given an string of text, get related articles (1-3 articles currently)
 export async function getMoves(game_id: number, currentQuery: string){
-    const link = "http://127.0.0.1:5000/api/new_turn/" + game_id.toString();
+    var formData = new FormData();
+    formData.append('query', currentQuery)
+    const link = "http://127.0.0.1:5000/api/new_articles/" + game_id.toString();
     
     const res = await fetch(link, {
         method: 'POST',
         mode: 'cors',
-        headers: {'Content-Type' : 'application/json'},
-
-        body: JSON.stringify({
-          article_id : game_id,
-          query: currentQuery
-        })
+        body: formData
       });
 
       return res.json();
