@@ -29,3 +29,16 @@ export async function getMoves(game_id: number, currentQuery: string){
 
       return res.json();
 }
+
+export async function newTurn (game_id: number, articleChoice: string) {
+  const link = "http://127.0.0.1:5000/api/new_turn/" + game_id.toString();
+    
+    const res = await fetch(link, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {'Content-Type' : 'application/json'},
+        body: JSON.stringify({article_id: articleChoice})
+      });
+
+      return res.json();
+}

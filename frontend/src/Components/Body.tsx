@@ -1,6 +1,6 @@
 import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Popover, PopoverProps, Typography } from "@mui/material";
 import { useState } from "react";
-import { getMoves } from "@/API/api";
+import { getMoves, newTurn } from "@/API/api";
 import { article, gameState } from "./Context";
 
 type props = {
@@ -16,6 +16,7 @@ export default function Body(props: props) {
     const [anchorEl, setAnchorEl] = useState<PopoverProps['anchorEl']>(null);
 
     function handleClick(article: article){
+        newTurn(game_id || 0, article.id.toString())
         setState(prevState => ({
             ...prevState,
             currentArticle: article,
