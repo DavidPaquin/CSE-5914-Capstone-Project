@@ -45,7 +45,7 @@ def curate_terminal_articles():
     curated = filter(remove_specials, ranked)
     final = map(lambda s: s.replace("_", " "), curated)
 
-    with open("terminal_articles.txt", "w") as f:
+    with open("terminal_articles.txt", "w", encoding="utf-8") as f:
         for i, x in enumerate(final, 1):
             # print(f"{i:2d}. {x:50s}", ranking[x])
             print(x, file=f)
