@@ -6,14 +6,16 @@ import { article, gameState } from "./Context";
 type props = {
     game_id?: number,
     currentArticle?: article,
+    endArticle?: article,
     setState: React.Dispatch<React.SetStateAction<gameState>>,
 }
 
 export default function Body(props: props) {
-    const {game_id, currentArticle, setState} = props;
+    const {game_id, currentArticle, endArticle, setState} = props;
     const [articles, setArticles] = useState<Array<article>>();
     const [open, setOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<PopoverProps['anchorEl']>(null);
+
 
     function handleClick(article: article){
         newTurn(game_id || 0, article.id.toString())
@@ -56,6 +58,8 @@ export default function Body(props: props) {
             justifyContent: 'start',
             alignItems: 'start',
             }}>
+                <Typography variant="h5">Goal: {endArticle?.title}</Typography>
+                <Divider/>
                 <Typography variant="h5">{currentArticle?.title}</Typography>
                 <Divider/>
                 <Typography>From {currentArticle?.source}</Typography>

@@ -47,7 +47,7 @@ export default function Home() {
           }}
         > S
             {!hide && <SideBar stateUpdater={setGameState} setHide={setHide}/>}
-            <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} setState={setGameState}/>
+            <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} endArticle={gameState.endArticle} setState={setGameState}/>
           </Grid>
       </Box>
     </Container>
