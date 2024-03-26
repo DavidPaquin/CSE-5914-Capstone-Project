@@ -5,6 +5,7 @@ import uuid
 from game import Game
 from queries import *
 import os
+import random
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -16,6 +17,15 @@ es = Elasticsearch(
 
 #Create a dictionary of game_id: Game
 games = dict()
+#Load terminal articles into memory
+with open("../terminal_articles.txt", encoding="utf-8") as f:
+    top_articles = [title.strip() for title in f.readlines()]
+    top_count = len(top_articles)
+
+#Randomly sample 2 articles from the top articles list, with denom limiting the allowed minimum popularity
+def pick_top_articles(denom=1):
+    start_title, end_title = random.sample(top_articles[0:top_count//denom], 2)
+    return [search_title_exact(es, start_title)['hits']['hits'][0], search_title_match(es, end_title)['hits']['hits'][0]]
 
 #Define endpoints for Flask API
 
@@ -26,7 +36,7 @@ def index() -> str:
     if len(games) > 0:
         return f"There are {len(games)} games currently running. <br />Navigate to <a href=\"/search_article/{list(games.keys())[0]}\"> /search_article/{list(games.keys())[0]} </a> to search the database. <br />Navigate to <a href=\"/start_article/{list(games.keys())[0]}\"> /start_article/{list(games.keys())[0]} </a> to get a random start article.<br /> <form action = \"/api/start_game\" method =\"post\"> <input type=\"submit\" value = \"Create New Game\"></form>" 
     else:
-        return "There are no games currently running. <br /> <form action = \"/api/start_game\" method =\"post\"> <input type=\"submit\" value = \"Create New Game\"></form>"     
+        return "There are no games currently running. <br /> <form action = \"/api/start_game\" method =\"post\"> <input type=\"radio\" id=\"easy\" name=\"difficulty\" value=\"easy\"> <label for=\"easy\">Easy</label>  <input type=\"radio\" id=\"medium\" name=\"difficulty\" value=\"medium\"> <label for=\"medium\">Medium</label>  <input type=\"radio\" id=\"hard\" name=\"difficulty\" value=\"hard\"> <label for=\"hard\">Hard</label> <input type=\"radio\" id=\"impossible\" name=\"difficulty\" value=\"impossible\"> <label for=\"impossible\">Impossible</label> <input type=\"submit\" value = \"Create New Game\"></form>"     
 
 #This function runs when a POST request is sent to 127.0.0.1:{port}/serve_article/{id}
 @app.post("/serve_article/<uuid:id>")
@@ -87,7 +97,17 @@ def start_article_get(id: uuid.UUID):
 def start_game_post():
     #Create a new id and matching Game object
     new_id = uuid.uuid4()
-    start_article, end_article = search_random(es)['hits']['hits'][0:2]
+    #Choose articles based on difficulty
+    difficulty = request.form["difficulty"].strip().lower()
+    if difficulty == "impossible":
+        start_article, end_article = search_random(es)['hits']['hits'][0:2]
+    elif difficulty == "easy":
+        start_article, end_article = pick_top_articles(4)
+    elif difficulty == "medium":
+        start_article, end_article = pick_top_articles(2)
+    elif difficulty == "hard":
+        start_article, end_article = pick_top_articles()
+
     games[new_id] = Game(new_id, start_article["_id"], end_article["_id"])
     print(f"A new game was created: {games[new_id]}")
     #Create the response
