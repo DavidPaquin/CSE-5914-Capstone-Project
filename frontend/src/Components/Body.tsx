@@ -1,11 +1,11 @@
-import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Popover, PopoverProps, Typography } from "@mui/material";
+import { Box, Button, Divider, Grid, List, ListItem, ListItemButton, Paper, Popover, PopoverProps, Typography } from "@mui/material";
 import { useState } from "react";
-import { getMoves, newTurn } from "@/API/api";
+import { getMoves, newTurn, newTurnRes } from "@/API/api";
 import { article, gameState } from "./Context";
 
 type props = {
-    game_id?: number,
-    currentArticle?: article,
+    game_id: number,
+    currentArticle: article,
     setState: React.Dispatch<React.SetStateAction<gameState>>,
 }
 
@@ -16,11 +16,16 @@ export default function Body(props: props) {
     const [anchorEl, setAnchorEl] = useState<PopoverProps['anchorEl']>(null);
 
     function handleClick(article: article){
-        newTurn(game_id || 0, article.id.toString())
-        setState(prevState => ({
-            ...prevState,
-            currentArticle: article,
-          }));
+        newTurn(game_id, article.id.toString()).then(data => {
+            return data as newTurnRes;
+        }).then(data => {
+            setState(prevState => ({
+                ...prevState,
+                currentArticle: article,
+                win: data.check_win,
+                history: data.history,
+            }))
+        });
     }
 
     const handleClose = () => {
@@ -39,7 +44,7 @@ export default function Body(props: props) {
         };
 
         //Get a list of articles similar to the query
-        getMoves(game_id || 0, selection.toString()).then(data => {
+        getMoves(game_id, selection.toString()).then(data => {
             return data as Array<article>;
         }).then(articles => setArticles(articles))
     
@@ -56,10 +61,10 @@ export default function Body(props: props) {
             justifyContent: 'start',
             alignItems: 'start',
             }}>
-                <Typography variant="h5">{currentArticle?.title}</Typography>
+                <Typography variant="h5">{currentArticle.title}</Typography>
                 <Divider/>
-                <Typography>From {currentArticle?.source}</Typography>
-                <Typography onMouseUp={handleMouseUp}>{currentArticle?.text}</Typography>
+                <Typography>From {currentArticle.source}</Typography>
+                <Typography onMouseUp={handleMouseUp}>{currentArticle.text}</Typography>
                 <Popover
                     open={open}
                     anchorEl={anchorEl}
@@ -68,14 +73,13 @@ export default function Body(props: props) {
                     disableAutoFocus
                 >
                     <List>
-                        {articles?.articles?.map((article, i) => {
+                        {articles?.map((article, i) => {
                             return (
-                                <ListItemButton onClick={() => handleClick(article)} key = {i}>
-                                    <ListItem key = {i}>{article.title}</ListItem>
+                                <ListItemButton onClick={() => handleClick(article)} key={i}>
+                                    <ListItem key={i}>{article.title}</ListItem>
                                 </ListItemButton>
                             )
                         })}
-                        
                     </List>
                 </Popover>
         </Box>

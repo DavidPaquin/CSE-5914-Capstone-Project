@@ -30,6 +30,12 @@ export async function getMoves(game_id: number, currentQuery: string){
       return res.json();
 }
 
+export interface newTurnRes {
+  game_id: number,
+  check_win: boolean,
+  history: Array<article>,
+}
+
 export async function newTurn (game_id: number, articleChoice: string) {
   const link = "http://127.0.0.1:5000/api/new_turn/" + game_id.toString();
     

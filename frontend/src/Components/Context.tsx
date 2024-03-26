@@ -6,16 +6,25 @@ export interface article {
 }
 
 export interface gameState {
-    game_id?: number,
-    currentArticle?: article,
+    game_id: number,
+    currentArticle: article,
     endArticle?: article,
+    win: boolean,
+    history: Array<article>,
 }
 
-export function  getInitGameState():gameState{
-    return gameState;
-}
-
-export const gameState: gameState = {
+export function getInitGameState():gameState{
+    return {
+        game_id: -1,
+        currentArticle: {
+            id: -1,
+            title: "The Wiki Game",
+            text: "Welcome to the Wiki game! EXPLAIN GAME HERE",
+            source: "The Wiki wanders"
+        },
+        win: false,
+        history: []
+    };
 }
 
 /* 
