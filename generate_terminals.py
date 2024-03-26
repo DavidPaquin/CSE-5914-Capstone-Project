@@ -22,7 +22,7 @@ def process(year, month, ranking):
 
 def scroll_history():
     ranking = defaultdict(int)
-    for year in range(2016, 2024):
+    for year in range(2016, 2021):
         for month in range(1, 13):
             print(f"Processing {year}-{month:02d}...", end="")
             process(year, month, ranking)
