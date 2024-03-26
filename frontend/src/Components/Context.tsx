@@ -20,7 +20,7 @@ export function getInitGameState():gameState{
         currentArticle: {
             id: -1,
             title: "The Wiki Game",
-            text: "Welcome to the Wiki game! EXPLAIN GAME HERE",
+            text: "Welcome to the Wiki game! The objective of the wiki game is to get from one article to another by highlighting text and selecting articles related to the end article.To start a new game, click \"New Game\".",
             source: "The Wiki wanders"
         },
         win: false,
