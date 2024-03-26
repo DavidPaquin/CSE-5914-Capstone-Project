@@ -12,7 +12,7 @@ export default function Home() {
   const [gameState, setGameState] = useState<gameState>(getInitGameState);
 
   //Create a new game at initialization and when win
-  useEffect(() => {
+  /*useEffect(() => {
     startGame().then(data => {
       return data as startGameRes;
     }).then(data => {
@@ -25,6 +25,7 @@ export default function Home() {
       }));
     })
   },[gameState.win]);
+  */
 
   return (
     <Container maxWidth='lg'>
@@ -52,7 +53,7 @@ export default function Home() {
       </Box>
       <Dialog open={gameState.win} onClose={() => setGameState(getInitGameState)}>
           <Typography variant={'h5'}>Congrats!</Typography> 
-          <Typography>You've gone from {gameState.history[0].title} to {gameState.endArticle?.title} in {gameState.history.length} moves!</Typography>
+          <Typography>You've gone from {gameState.history[0]?.title} to {gameState.endArticle?.title} in {gameState.history.length} moves!</Typography>
       </Dialog>
     </Container>
   );

@@ -74,7 +74,7 @@ export default function Body(props: props) {
                     disableAutoFocus
                 >
                     <List>
-                        {articles?.map((article, i) => {
+                        {articles?.articles?.map((article, i) => {
                             return (
                                 <ListItemButton onClick={() => handleClick(article)} key={i}>
                                     <ListItem key={i}>{article.title}</ListItem>
