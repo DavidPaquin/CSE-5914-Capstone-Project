@@ -10,9 +10,8 @@ import { getInitGameState, gameState } from '@/Components/Context';
 
 export default function Home() {
   const [gameState, setGameState] = useState<gameState>(getInitGameState);
-  const [hide, setHide] = useState(false);
 
-  //Create a new game only at firt render
+  //Create a new game at initialization and when win
   useEffect(() => {
     startGame().then(data => {
       return data as startGameRes;
@@ -47,7 +46,7 @@ export default function Home() {
             alignItems: 'center'
           }}
         >
-            {!hide && <SideBar state={gameState} setState={setGameState}/>}
+            <SideBar state={gameState} setState={setGameState}/>
             <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} setState={setGameState}/>
           </Grid>
       </Box>
