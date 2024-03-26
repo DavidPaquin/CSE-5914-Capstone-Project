@@ -21,7 +21,8 @@ export default function Home() {
         ...prevState,
         game_id: data.game_id,
         currentArticle: data.start_article,
-        endArticle: data.end_article
+        endArticle: data.end_article,
+        startTime: Date.now(),
       }));
     })
   },[gameState.win]);
@@ -46,7 +47,7 @@ export default function Home() {
             alignItems: 'center'
           }}
         >
-            {!hide && <SideBar state={gameState} setState={setGameState} setHide={setHide}/>}
+            {!hide && <SideBar state={gameState} setState={setGameState}/>}
             <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} setState={setGameState}/>
           </Grid>
       </Box>

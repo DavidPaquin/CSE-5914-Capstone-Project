@@ -11,6 +11,7 @@ export interface gameState {
     endArticle?: article,
     win: boolean,
     history: Array<article>,
+    startTime: number,
 }
 
 export function getInitGameState():gameState{
@@ -23,7 +24,8 @@ export function getInitGameState():gameState{
             source: "The Wiki wanders"
         },
         win: false,
-        history: []
+        history: [],
+        startTime: Date.now(),
     };
 }
 
