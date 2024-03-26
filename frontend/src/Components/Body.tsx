@@ -15,6 +15,7 @@ export default function Body(props: props) {
     const [open, setOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<PopoverProps['anchorEl']>(null);
 
+
     function handleClick(article: article){
         newTurn(game_id, article.id.toString()).then(data => {
             return data as newTurnRes;
@@ -61,7 +62,7 @@ export default function Body(props: props) {
             justifyContent: 'start',
             alignItems: 'start',
             }}>
-                <Typography variant="h5">{currentArticle.title}</Typography>
+                <Typography variant="h5">{currentArticle?.title}</Typography>
                 <Divider/>
                 <Typography>From {currentArticle.source}</Typography>
                 <Typography onMouseUp={handleMouseUp}>{currentArticle.text}</Typography>

@@ -46,7 +46,7 @@ export default function Home() {
             alignItems: 'center'
           }}
         >
-            {!hide && <SideBar stateUpdater={setGameState} setHide={setHide}/>}
+            {!hide && <SideBar state={gameState} setState={setGameState} setHide={setHide}/>}
             <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} setState={setGameState}/>
           </Grid>
       </Box>
