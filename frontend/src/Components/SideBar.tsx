@@ -10,7 +10,7 @@ type props = {
 
 export default function SideBar(props: props) {
     const {state, setState} = props;
-    const [time, setTime] = useState(Date.now());
+    const [time, setTime] = useState(0);
     
     //Update the time each second 
     useEffect(() => {
