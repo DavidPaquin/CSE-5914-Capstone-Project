@@ -26,6 +26,7 @@ export default function SideBar(props: props) {
             setState(prevState => ({
               ...prevState,
               game_id: data.game_id,
+              startTitle: data.start_article.title,
               currentArticle: data.start_article,
               endArticle: data.end_article,
               startTime: Date.now(),
@@ -47,7 +48,7 @@ export default function SideBar(props: props) {
                 </Grid>
                 <Divider/>
                 <Typography variant="h6">(Top)</Typography>
-                <Typography>Start article: {state.currentArticle.title}</Typography>
+                <Typography>Start article: {state.startTitle}</Typography>
                 <Typography>End Article: {state.endArticle?.title}</Typography>
                 <Typography>Time: {time}</Typography>
                 <Button variant="text" color="info" onClick={handleNewGame}>New Game</Button>

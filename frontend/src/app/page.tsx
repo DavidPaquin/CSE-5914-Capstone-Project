@@ -29,6 +29,9 @@ export default function Home() {
 
   return (
     <Container maxWidth='lg'>
+      {console.log(gameState.win)}
+      {console.log(gameState)}
+      {console.log(gameState.win == "True")}
       <Box
         sx={{
           my: 4,
@@ -51,9 +54,9 @@ export default function Home() {
             <Body game_id={gameState.game_id} currentArticle={gameState.currentArticle} setState={setGameState}/>
           </Grid>
       </Box>
-      <Dialog open={gameState.win} onClose={() => setGameState(getInitGameState)}>
+      <Dialog open={gameState.win == "True"} onClose={() => setGameState(getInitGameState)}>
           <Typography variant={'h5'}>Congrats!</Typography> 
-          <Typography>You've gone from {gameState.history[0]?.title} to {gameState.endArticle?.title} in {gameState.history.length} moves!</Typography>
+          <Typography>You've gone from {gameState.startTitle} to {gameState.endArticle?.title} in {gameState.history.length} moves!</Typography>
       </Dialog>
     </Container>
   );
