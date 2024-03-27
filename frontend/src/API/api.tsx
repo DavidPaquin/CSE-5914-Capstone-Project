@@ -8,8 +8,12 @@ export interface startGameRes {
 
 //Initialize a game state, get a gameID, start article, and end article
 export async function startGame(){
+    var formData = new FormData();
+    formData.append('difficulty', 'easy')
     const res = await fetch(`http://127.0.0.1:5000/api/start_game`, {
-      method: 'POST'
+      method: 'POST',
+      mode: 'cors',
+      body: formData
     });
 
     return res.json();
