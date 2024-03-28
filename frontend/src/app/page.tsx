@@ -29,9 +29,6 @@ export default function Home() {
 
   return (
     <Container maxWidth='lg'>
-      {console.log(gameState.win)}
-      {console.log(gameState)}
-      {console.log(gameState.win == "True")}
       <Box
         sx={{
           my: 4,
