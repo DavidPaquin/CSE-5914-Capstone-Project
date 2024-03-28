@@ -33,7 +33,7 @@ def scroll_history():
 def remove_specials(title):
     return not (
         title.split(":")[0]
-        in ("Special", "Help", "Wikipedia", "File", "User", "Template", "Category")
+        in ("Special", "Help", "Wikipedia", "File", "User", "Template", "Category", "Portal")
         or title in ("Main_Page", "404.php")
         or "disambiguation" in title.lower()
     )
